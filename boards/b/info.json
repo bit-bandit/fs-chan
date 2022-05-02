@@ -1,0 +1,11 @@
+{
+  "description": "Test board. Anything goes here, really.",
+  "banned_ips": [],
+  "forced_anon": false,
+  "max_threads": 120,
+  "max_replies": 301,
+  "max_files": 150,
+  "max_filesize": 8000000,
+  "max_postlength": 2500,
+  "most_recent_post": 0
+}

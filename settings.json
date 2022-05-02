@@ -1,0 +1,8 @@
+{
+  "admin_hashes": [],
+  "banned_ips": [],
+  "board_directory": "./boards",
+  "media_directory": "./media",
+  "default_name": "Anonymous",
+  "port": 8000
+}
