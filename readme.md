@@ -41,6 +41,8 @@ b                # Board name.
 > `DELETE /:board/:thread_id/:reply_id` Delete a reply from a thread (Also
 > requires a password.)
 
+> `GET /media/:image` Retrive a media file on the thread. 
+
 ## `settings.json`
 
 Global site configuration.

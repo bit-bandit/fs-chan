@@ -37,7 +37,7 @@ interface Post {
   "name": string | null;
   "title": string | null;
   "content": string | null;
-  "attachments": string | null;
+  "attachments": string;
   "admin"?: boolean;
   "replies": Reply[];
 }
@@ -65,8 +65,15 @@ async function updateBoard(
     let ps: string = await Deno.readTextFile(`${boardpath}/${i.name}`); // Page string
     let po: Post = await JSON.parse(ps); // Great argument for interfaces #1
 
+    // TODO: Also delete files in posts
     if (po.replies.length > maxposts) {
-      await Deno.remove(`${boardpath}/${i.name}`);
+       await Deno.remove(`${boardpath}/${i.name}`);
+       await Deno.remove(`.${po.attachments}`)
+       await po.replies.map(async function(x){
+	   if (x.attachments != null) {
+	       await Deno.remove(`.${x.attachments}`)
+	   }
+       });
     }
 
     let fd: any = await Deno.lstat(`${boardpath}/${i.name}`); // file data
@@ -85,6 +92,7 @@ async function updateBoard(
     let postsToDelete: any = bi.splice(maxreplies, bi.length - maxreplies);
 
     for (let p in postsToDelete) { // bad posts
+      // TODO: Delete all files in thread.	  
       await Deno.remove(`${boardpath}/${postsToDelete[p].name}`);
     }
   }
@@ -166,6 +174,7 @@ const routes = new Router()
         "attachments": json.attachments,
         "admin": json.admin ?? null,
         "replies": json.replies.length,
+	"image-replies": json.replies.map(x => x.attachments != null) // This is such a hack, I'm sorry.
       });
     }
 
@@ -337,7 +346,6 @@ const routes = new Router()
     );
   })
   .delete("/boards/:board/:thread_id", async function (ctx) {
-    // Delete file.
     const body = await ctx.request.body();
     const value = await body.value;
     const formData = await value.read();
@@ -349,6 +357,7 @@ const routes = new Router()
     let boardJSON = await JSON.parse(boardfile);
     const hashed = await hash(`${formData.pass}`);
 
+    // TODO: Also delete files in posts
     if (globalConf.admin_hashes.includes(`${hashed}`)) {
       await Deno.remove(`./${ctx.params.board}/${ctx.params.thread_id}.json`);
       await updateBoard(
@@ -362,7 +371,6 @@ const routes = new Router()
     }
   })
   .delete("/boards/:board/:thread_id/:reply_id", async function (ctx) {
-    // Pop item from array, using findindex().
     const body = await ctx.request.body();
     const value = await body.value;
     const formData = await value.read();
@@ -384,6 +392,8 @@ const routes = new Router()
     let hashed = await hash(formData.fields.pass);
     let arrElement: number = await thread.replies.findIndex(getElement);
 
+    // TODO: Also delete files in posts
+      
     if (globalConf.admin_hashes.includes(`${hashed}`)) {
       thread.replies.splice(arrElement, 1);
       await Deno.writeTextFile(
