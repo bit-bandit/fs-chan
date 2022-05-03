@@ -55,7 +55,7 @@ async function updateBoard(
   let boardpath: string = `./${globalConf.board_directory}/${board}`;
 
   // Loop 1: Organize the files, delete last modified one.
-  let bi: object[] = []; // Board Items. Placeholder name because I'm lazy.
+  let bi: object[] = []; // Board Items.
 
   for await (let i of Deno.readDir(boardpath)) {
     if (`${i.name}` == "info.json") {
@@ -65,15 +65,18 @@ async function updateBoard(
     let ps: string = await Deno.readTextFile(`${boardpath}/${i.name}`); // Page string
     let po: Post = await JSON.parse(ps); // Great argument for interfaces #1
 
-    // TODO: Also delete files in posts
     if (po.replies.length > maxposts) {
-       await Deno.remove(`${boardpath}/${i.name}`);
-       await Deno.remove(`.${po.attachments}`)
-       await po.replies.map(async function(x){
-	   if (x.attachments != null) {
-	       await Deno.remove(`.${x.attachments}`)
-	   }
-       });
+      await Deno.remove(`${boardpath}/${i.name}`);
+      await Deno.remove(
+        `${globalConf.media_directory}/${po.attachments.split("/")[2]}`,
+      );
+      await po.replies.map(async function (x: Reply) {
+        if (x.attachments != null) {
+          await Deno.remove(
+            `${globalConf.media_directory}/${x.attachments.split("/")[2]}`,
+          );
+        }
+      });
     }
 
     let fd: any = await Deno.lstat(`${boardpath}/${i.name}`); // file data
@@ -92,7 +95,7 @@ async function updateBoard(
     let postsToDelete: any = bi.splice(maxreplies, bi.length - maxreplies);
 
     for (let p in postsToDelete) { // bad posts
-      // TODO: Delete all files in thread.	  
+      // TODO: Delete all files in thread.
       await Deno.remove(`${boardpath}/${postsToDelete[p].name}`);
     }
   }
@@ -174,7 +177,7 @@ const routes = new Router()
         "attachments": json.attachments,
         "admin": json.admin ?? null,
         "replies": json.replies.length,
-	"image-replies": json.replies.map(x => x.attachments != null) // This is such a hack, I'm sorry.
+        "image-replies": json.replies.map((x) => x.attachments != null), // This is such a hack, I'm sorry.
       });
     }
 
@@ -207,12 +210,16 @@ const routes = new Router()
 
     // Check incoming data first.
     if (
-      // TODO: Add IP params. They're in there for a reason.
       !formData.files[0] ||
       formData.fields.content.length > boardJSON.max_postlength ||
       !formData.fields.content
     ) {
       ctx.response.body = { "err": "Invalid" };
+      ctx.response.status = Status.NotAcceptable;
+    }
+
+    if (boardJSON.banned_ips.includes(ctx.request.ip)) {
+      ctx.response.body = { "err": "You are banned" };
       ctx.response.status = Status.NotAcceptable;
     }
 
@@ -354,11 +361,22 @@ const routes = new Router()
       `${globalConf.board_directory}/${ctx.params.board}/info.json`,
     );
 
+    let threadFile = await Deno.readTextFile(
+      `${globalConf.board_directory}/${ctx.params.board}/${ctx.params.thread_id}.json`,
+    );
+    let thread: Post = await JSON.parse(threadFile);
+
     let boardJSON = await JSON.parse(boardfile);
     const hashed = await hash(`${formData.pass}`);
 
-    // TODO: Also delete files in posts
     if (globalConf.admin_hashes.includes(`${hashed}`)) {
+      await thread.replies.map(async function (x: Reply) {
+        if (x.attachments != null) {
+          await Deno.remove(
+            `${globalConf.media_directory}/${x.attachments.split("/")[2]}`,
+          );
+        }
+      });
       await Deno.remove(`./${ctx.params.board}/${ctx.params.thread_id}.json`);
       await updateBoard(
         ctx.params.board,
@@ -392,9 +410,12 @@ const routes = new Router()
     let hashed = await hash(formData.fields.pass);
     let arrElement: number = await thread.replies.findIndex(getElement);
 
-    // TODO: Also delete files in posts
-      
     if (globalConf.admin_hashes.includes(`${hashed}`)) {
+      await Deno.remove(
+        `${globalConf.media_directory}/${
+          thread.replies[arrElement].attachments.split("/")[2]
+        }`,
+      ); // God why
       thread.replies.splice(arrElement, 1);
       await Deno.writeTextFile(
         `${globalConf.board_directory}/${ctx.params.board}/${ctx.params.thread_id}.json`,

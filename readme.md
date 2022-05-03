@@ -1,8 +1,16 @@
 <!--This probably has something in it that I removed/didn't impliment while actually programming the damn thing.-->
 
+![](media/logo.png)
+
 # fs-chan
 
 `fs-chan` is a filesystem-based imageboard software.
+
+## Usage
+
+```sh
+deno run --allow-read='./','/tmp/' --allow-net='0.0.0.0:8000' --allow-write'./','/tmp/' main.ts
+```
 
 ## Architecture
 
@@ -41,7 +49,7 @@ b                # Board name.
 > `DELETE /:board/:thread_id/:reply_id` Delete a reply from a thread (Also
 > requires a password.)
 
-> `GET /media/:image` Retrive a media file on the thread. 
+> `GET /media/:image` Retrive a media file on the thread.
 
 ## `settings.json`
 
