@@ -30,24 +30,24 @@ b                # Board name.
 
 ## API
 
-> `GET /boards/` Return a JSON formatted list of site boards, and their
-> descriptions.
+> `GET /` Return a JSON formatted list of site boards, and their descriptions.
 
-> `GET /:board` Return a 'catalog', which is a JSON pseudofile showing all
-> threads in the board, the number of replies, and media files in said thread.
+> `GET /boards/:board` Return a 'catalog', which is a JSON pseudofile showing
+> all threads in the board, the number of replies, and media files in said
+> thread.
 
-> `GET /:board/:thread_id` Retrive an entire thread, as a json format.
+> `GET /boards/:board/:thread_id` Retrive an entire thread, as a json format.
 
-> `POST /:board` Add a thread. (Requires at least _some_ text, and a media
-> file.)
+> `POST /boards/:board` Add a thread. (Requires at least _some_ text, and a
+> media file.)
 
-> `POST /:board/:thread_id` Reply to a thread.
+> `POST /boards/:board/:thread_id` Reply to a thread.
 
-> `DELETE /:board/:thread_id` Delete a thread (Requires a password, more on that
-> later.)
+> `DELETE /boards/:board/:thread_id` Delete a thread (Requires a password, more
+> on that later.)
 
-> `DELETE /:board/:thread_id/:reply_id` Delete a reply from a thread (Also
-> requires a password.)
+> `DELETE /boards/:board/:thread_id/:reply_id` Delete a reply from a thread
+> (Also requires a password.)
 
 > `GET /media/:image` Retrive a media file on the thread.
 
@@ -92,6 +92,12 @@ one.
 - `max_postlength`: Maximum characters a post can have.
 
 - `most_recent-post`: Numerical ID of most recent post submitted to board.
+
+## Frontend
+
+See the following:
+
+(sam-chan)[https://github.com/bit-bandit/sam-chan]
 
 ## License
 
