@@ -97,7 +97,7 @@ one.
 
 See the following:
 
-(sam-chan)[https://github.com/bit-bandit/sam-chan]
+[sam-chan](https://github.com/bit-bandit/sam-chan)
 
 ## License
 
