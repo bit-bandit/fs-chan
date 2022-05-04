@@ -24,7 +24,7 @@ interface Reply {
   "id": number | string;
   "posted": string;
   "tripcode": string | null;
-  "name": string | null;
+  "name": string;
   "content": string | null;
   "attachments": string | null;
   "admin"?: boolean;
@@ -34,7 +34,7 @@ interface Post {
   "id": number | string;
   "posted": string;
   "tripcode": string | null;
-  "name": string | null;
+  "name": string;
   "title": string | null;
   "content": string | null;
   "attachments": string;
@@ -124,7 +124,7 @@ async function filename(path: string, id: string): Promise<string | null> {
     await Deno.remove(path);
     // Writiing the filename like this because I'm a fucking caveman
     return (
-      `${globalConf.media_directory}/${id}.${path.split(".")[1]}`
+      `/media/${id}.${path.split(".")[1]}`
     );
   }
   return null;
@@ -168,6 +168,11 @@ const routes = new Router()
       );
       let json: Post = await JSON.parse(file);
 
+      let img_replies = 0;
+
+      json.replies.map(async function (x) {
+        if (x.attachments != null) img_replies += 1;
+      });
       // Add type for this in the future.
       res.push({
         "id": json.id,
@@ -177,7 +182,7 @@ const routes = new Router()
         "attachments": json.attachments,
         "admin": json.admin ?? null,
         "replies": json.replies.length,
-        "image-replies": json.replies.map((x) => x.attachments != null), // This is such a hack, I'm sorry.
+        "image_replies": img_replies,
       });
     }
 
@@ -319,7 +324,7 @@ const routes = new Router()
       "id": threadID,
       "posted": time.toISOString(),
       "tripcode": trip,
-      "name": formData.fields.name ?? globalConf.default_name,
+      "name": formData.name ?? globalConf.default_name,
       "content": formData.fields.content ?? null,
       "attachments": await filename(formData.files[0].filename, `${imgID}`) ??
         null,
